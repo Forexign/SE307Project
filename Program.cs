@@ -751,7 +751,7 @@ public class ChanceTile : Tile
     private void GoBackTiles(Player player, int numberOfTiles)
     {
         Console.WriteLine($"{player.Name} is going back {numberOfTiles} tiles.");
-        player.Position = (player.Position - numberOfTiles + Program.tiles.Count) % Program.tiles.Count;
+        player.Position = player.Position - numberOfTiles;
     }
 
     private void GetOutOfJail(Player player)
@@ -1062,23 +1062,24 @@ public class Program
 {
 
     new StartTile("Start"),
-   new RealEstateTile("Buy Land (Tier 1)-1", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
+    new RealEstateTile("Buy Land (Tier 1)-1", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
     new CommunityChestTile("Community Chest"),
     new RealEstateTile("Buy Land (Tier 1)-2", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
-  new IncomeTaxTile("Income Tax", 200),
+    new IncomeTaxTile("Income Tax", 200),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
     new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
     new ChanceTile("Chance"),
-   new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
+    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
     new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
     new JailTile("The Jail"),
-   new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700 }),
+    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700 }),
     new UtilityTile("Electric Company", 100),
+    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700 }),
     new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
     new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800 }),
     new CommunityChestTile("Community Chest"),
-   new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800 }),
+    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800 }),
     new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800 }),
     new FreeParkingTile("Free Parking"),
     new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925 }),
@@ -1097,6 +1098,7 @@ public class Program
     new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
     new ChanceTile("Chance"),
+    new RealEstateTile("Buy Land (Tier 7) -6", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 })
     new LuxuryTaxTile("Luxury Tax", 150),
     new RealEstateTile("Buy Land (Tier 7) -6", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 })
 
