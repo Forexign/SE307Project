@@ -68,9 +68,7 @@ public class StartTile : Tile
 
     public override void PerformAction(Player player, int diceSum)
     {
-        Console.WriteLine($"{player.Name} landed on Start! Collect $200.");
-        player.Balance += 200;
-        Console.WriteLine($"Updated Balance for {player.Name}: ${player.Balance}");
+        // controlled in the main 
     }
 }
 
@@ -1062,9 +1060,9 @@ public class Program
 {
 
     new StartTile("Start"),
-    new RealEstateTile("Buy Land (Tier 1)-1", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
+    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
     new CommunityChestTile("Community Chest"),
-    new RealEstateTile("Buy Land (Tier 1)-2", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
+    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
     new IncomeTaxTile("Income Tax", 200),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
     new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
@@ -1098,9 +1096,9 @@ public class Program
     new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
     new ChanceTile("Chance"),
-    new RealEstateTile("Buy Land (Tier 7) -6", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 })
+    new RealEstateTile("Buy Land (Tier 8)", 8, 320, 200, new int[] { 28, 150, 450, 1000, 1200 }),
     new LuxuryTaxTile("Luxury Tax", 150),
-    new RealEstateTile("Buy Land (Tier 7) -6", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 })
+    new RealEstateTile("Buy Land (Tier 8)", 8, 400, 200, new int[] { 50, 200, 600, 1400, 1200 })
 
 
 };
