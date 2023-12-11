@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 public class Player
@@ -1019,11 +1020,11 @@ public class Program
     {
         Console.WriteLine("Board View:");
 
-        foreach (Tile tile in tiles)
+        for (int i = 0; i < tiles.Count; i++)
         {
-            string tileInfo = $"{tile.Name}";
-
-            if (tile is RealEstateTile realEstateTile)
+            string tileInfo = $"{tiles.ElementAt(i).Name}";
+            List<Player> pl = players.FindAll(p => p.Position == i);
+            if (tiles.ElementAt(i) is RealEstateTile realEstateTile)
             {
                 int houseCount = realEstateTile.GetHouseCount();
                 if (houseCount > 0)
@@ -1035,8 +1036,19 @@ public class Program
                     tileInfo += " (Hotel)";
                 }
             }
+            
+            
+            if(pl.Count > 0)
+            {
+                tileInfo += "  ";
+                pl.ForEach(p => tileInfo +="( " + p.Name + " ),");
+            }
 
             Console.WriteLine($"- {tileInfo}");
+
+
+
+
         }
 
         Console.WriteLine();
