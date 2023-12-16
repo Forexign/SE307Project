@@ -22,7 +22,7 @@ public class Player
     public void GoToJail()
     {
         Console.WriteLine($"{Name} goes to jail!");
-        Position = Tiles.FindIndex(t => t is JailTile);
+        Position = 10;
         InJail = true;
         TurnsInJail = 2; // Set the number of turns the player has to stay in jail
     }
@@ -89,7 +89,7 @@ public class GoToJailTile : Tile
         if (player.jailfree == false)
         {
             Console.WriteLine($"{player.Name} landed on {Name}! They go to jail immediately.");
-            player.Position = Program.tiles.FindIndex(t => t is JailTile); // Set player's position to the Jail tile
+            player.Position = 10; // Set player's position to the Jail tile
 
             // Update player's position to the actual Jail tile
             if (player.Position >= 0 && player.Position < Program.tiles.Count && Program.tiles[player.Position] is JailTile)
@@ -750,7 +750,7 @@ public class ChanceTile : Tile
     private void GoBackTiles(Player player, int numberOfTiles)
     {
         Console.WriteLine($"{player.Name} is going back {numberOfTiles} tiles.");
-        player.Position = player.Position - numberOfTiles;
+        player.Position = (player.Position - numberOfTiles + Program.tiles.Count) % Program.tiles.Count;
     }
 
     private void GetOutOfJail(Player player)
@@ -1055,7 +1055,7 @@ public class Program
 
         foreach (Player player in allPlayers)
         {
-            Tile playerTile = tiles[player.Position];
+            Tile playerTile = tiles[player.Position % tiles.Count];
             string playerInfo = $"{player.Name} (Balance: {player.Balance}, Position: {player.Position}, Tile: {playerTile.Name})";
 
             Console.WriteLine(playerInfo);
@@ -1202,9 +1202,9 @@ public class Program
 
                 // Get the tile where the player landed
                 Tile landedTile = tiles[newPosition];
-
+                currentPlayer.Position = newPosition;
                 Console.WriteLine($"{currentPlayer.Name} landed on {landedTile.Name}");
-
+                
                 // Check if the player is in jail
                 if (landedTile is JailTile)
                 {
@@ -1212,11 +1212,9 @@ public class Program
                 }
                 else
                 {
+                    currentPlayer.Position = newPosition;
                     landedTile.PerformAction(currentPlayer, sum);
-                }
-
-                // Update the player's position
-                currentPlayer.Position = newPosition;
+                }                
             }
 
             // Move to the next player
