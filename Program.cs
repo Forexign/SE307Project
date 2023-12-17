@@ -1016,6 +1016,23 @@ public class FreeParkingTile : Tile
 public class Program
 {
 
+    static void DisplayPropertiesAndBalances(List<Player> allPlayers)
+    {
+        Console.WriteLine("Properties and Balances:");
+
+        foreach (Player player in allPlayers)
+        {
+            Console.WriteLine($"{player.Name} (Balance: {player.Balance})");
+
+            foreach (Tile property in player.Tiles)
+            {
+                Console.WriteLine($"  - {property.Name}");
+            }
+
+            Console.WriteLine();
+        }
+    }
+
     static void DisplayBoard(List<Player> allPlayers)
     {
         Console.WriteLine("Board View:");
@@ -1162,7 +1179,20 @@ public class Program
 
             DisplayBoard(players);
 
-            Console.WriteLine($"It's {currentPlayer.Name}'s turn. Press Enter to roll the dice.");
+            Console.WriteLine($"It's {currentPlayer.Name}'s turn. Do you want to view properties and balances before rolling the dice? (y/n)");
+            string input = Console.ReadLine();
+
+            if (input.ToLower() == "y")
+            {
+                // Display properties and balances on demand
+                DisplayPropertiesAndBalances(players);
+            }
+            else if (input.ToLower() != "n")
+            {
+                Console.WriteLine($"Invalid input. Press Enter to roll the dice.");
+            }
+
+            Console.WriteLine($"Press Enter to roll the dice.");
             Console.ReadLine();
 
             if (currentPlayer.InJail)
