@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 
 public class Player
 {
@@ -43,7 +44,6 @@ public class Player
         else
         {
             Console.WriteLine($"{Name} cannot afford to pay {amount}Ꝟ.");
-            // Optionally handle additional logic if the player cannot afford the payment
         }
     }
 
@@ -82,25 +82,13 @@ public class GoToJailTile : Tile
 
     public override void PerformAction(Player player, int diceSum)
     {
-        /* Console.WriteLine($"{player.Name} landed on {Name}! They go to jail immediately.");
-         player.Position = Program.tiles.FindIndex(t => t is JailTile); // Set player's position to the Jail tile
-         player.GoToJail();*/
 
         if (player.jailfree == false)
         {
             Console.WriteLine($"{player.Name} landed on {Name}! They go to jail immediately.");
-            player.Position = 10; // Set player's position to the Jail tile
 
-            // Update player's position to the actual Jail tile
-            if (player.Position >= 0 && player.Position < Program.tiles.Count && Program.tiles[player.Position] is JailTile)
-            {
-                player.GoToJail();
-            }
-            else
-            {
-                // Handle the case where the Jail tile is not found
-                Console.WriteLine("Error: Jail tile not found!");
-            }
+            // Send the player to the jail
+            player.GoToJail();
         }
         else
         {
@@ -182,7 +170,7 @@ public class RealEstateTile : Tile
     {
         if (Owner == null)
         {
-            // Tile is unowned, allow the player to buy it
+            // Tile doesn't have an owner, allow the player to buy it
             Console.WriteLine($"{player.Name} landed on {Name}. It's available for purchase at a cost of {BuyLandCost}Ꝟ.");
 
             Console.Write($"Do you want to buy {Name}? (y/n): ");
@@ -227,7 +215,7 @@ public class RealEstateTile : Tile
                         houseCount = 5;
                     }
                     break;
-                    // case 3: Do nothing
+
             }
         }
         else
@@ -238,8 +226,7 @@ public class RealEstateTile : Tile
             //if cant pay rent
             if (player.Balance < rent)
             {
-                Program.players.Remove(player);
-                ReturnProperties(player);
+                Program.kill(player);
             }
             else
             {
@@ -272,12 +259,13 @@ public class RealEstateTile : Tile
         else
         {
             Console.WriteLine($"{player.Name} cannot afford to build a hotel or has not built 5 houses yet.");
+
         }
     }
 
     private void BuildHouse(Player player)
     {
-        int maxHouses = 4; // Maximum number of houses allowed before upgrading to a hotel
+        int maxHouses = 4; // Maximum number of houses allowed before uprgading to a hotel
 
         if (houseCount < maxHouses && player.CanAfford(BuildHouseCost))
         {
@@ -328,11 +316,6 @@ public class RealEstateTile : Tile
         }
     }
 }
-
-
-
-
-
 
 public class TrainStationTile : Tile
 {
@@ -487,8 +470,13 @@ public class IncomeTaxTile : Tile
 
     public override void PerformAction(Player player, int diceSum)
     {
+
         Console.WriteLine($"{player.Name} must pay {TaxAmount}Ꝟ for Income Tax.");
         player.Balance -= TaxAmount;
+        if (player.Balance < 0)
+        {
+            Program.kill(player);
+        }
     }
 }
 
@@ -504,8 +492,14 @@ public class LuxuryTaxTile : Tile
 
     public override void PerformAction(Player player, int diceSum)
     {
+
         Console.WriteLine($"{player.Name} must pay {TaxAmount}Ꝟ for Luxury Tax.");
         player.Balance -= TaxAmount;
+
+        if (player.Balance < 0)
+        {
+            Program.kill(player);
+        }
     }
 }
 
@@ -561,11 +555,10 @@ public class ChanceTile : Tile
     {
         Console.WriteLine($"{player.Name} landed on Chance! Drawing a Chance card...");
 
-        // Simulate drawing a random Chance card
+        // Simulating a random card from the chanceTile.
         Random random = new Random();
         int cardNumber = random.Next(1, 9);
 
-        // Perform the action based on the drawn card
         switch (cardNumber)
         {
             case 1:
@@ -590,7 +583,7 @@ public class ChanceTile : Tile
                 GetOutOfJail(player);
                 break;
             case 8:
-                PayEachPlayer(player, 50);
+                PayEachPlayer(player, 50, Program.players);
                 break;
         }
     }
@@ -606,8 +599,6 @@ public class ChanceTile : Tile
     private void PlaceMoneyOnBoard(Player player, int amount)
     {
         Console.WriteLine($"Placing {amount}Ꝟ on the board.");
-
-        // Implement logic to place money on the board (example: deduct it from player's balance)
         if (player.Balance >= amount)
         {
             player.Balance -= amount;
@@ -619,7 +610,7 @@ public class ChanceTile : Tile
         }
         else
         {
-            // Handle the case where the player doesn't have enough money to place on the board
+            // Player doesn't have enough money scenario.
             Console.WriteLine($"{player.Name} doesn't have enough money to place {amount}Ꝟ on the board.");
             Console.WriteLine($"{player.Name} has a negative balance and is out of the game!");
             Program.players.Remove(player);
@@ -633,7 +624,6 @@ public class ChanceTile : Tile
         totalMoney += player.Tiles.OfType<RealEstateTile>().Count(t => t.GetHouseCount() == 5) * 100;
 
         Console.WriteLine($"Placing {totalMoney}Ꝟ on the board for houses and hotels.");
-        // Implement logic to place money on the board (not specified in your original code)
     }
 
     private void TravelToNearestTrainStation(Player player)
@@ -644,7 +634,7 @@ public class ChanceTile : Tile
         {
             Console.WriteLine($"{player.Name} is traveling to the nearest train station.");
             player.Position = nearestTrainStationIndex;
-            //
+
             Program.tiles[nearestTrainStationIndex].PerformAction(player, 0);
 
             // Collect 200Ꝟ if passing through the beginning tile
@@ -672,18 +662,22 @@ public class ChanceTile : Tile
         Console.WriteLine($"{player.Name} has jail free card");
     }
 
-    private void PayEachPlayer(Player player, int amount)
+    private static void PayEachPlayer(Player payingPlayer, int amount, List<Player> allPlayers)
     {
-        Console.WriteLine($"{player.Name} has to pay each player {amount}Ꝟ.");
+        Console.WriteLine($"{payingPlayer.Name} has to pay each player {amount}Ꝟ.");
 
-        foreach (Player otherPlayer in Program.players)
+        foreach (Player otherPlayers in allPlayers)
         {
-            if (otherPlayer != player)
+            if (otherPlayers != payingPlayer)
             {
-                Console.WriteLine($"{player.Name} pays {otherPlayer.Name} {amount}Ꝟ.");
-                player.Balance -= amount;
-                otherPlayer.Balance += amount;
+                Console.WriteLine($"{payingPlayer.Name} pays {otherPlayers.Name} {amount}Ꝟ.");
+                payingPlayer.Balance -= amount;
+                otherPlayers.Balance += amount;
             }
+        }
+        if (payingPlayer.Balance < 0)
+        {
+            Program.kill(payingPlayer);
         }
     }
 
@@ -726,7 +720,6 @@ public class ChanceTile : Tile
                 return backwardIndex;
             }
 
-            // Prevent infinite loop if there are no train stations on the board
             if (forwardIndex == currentIndex && backwardIndex == currentIndex)
             {
                 return -1;
@@ -746,11 +739,9 @@ public class CommunityChestTile : Tile
     {
         Console.WriteLine($"{player.Name} landed on Community Chest! Drawing a Community Chest card...");
 
-        // Simulate drawing a random Community Chest card
+        // Random card from community chest 
         Random random = new Random();
         int cardNumber = random.Next(1, 9);
-
-        // Perform the action based on the drawn card
         DrawCard(player, cardNumber);
     }
 
@@ -780,7 +771,7 @@ public class CommunityChestTile : Tile
                 TravelToJail(player);
                 break;
             case 8:
-                PayEachPlayer(player, 100);
+                PayEachPlayer(player, 100, Program.players);
                 break;
         }
     }
@@ -795,7 +786,7 @@ public class CommunityChestTile : Tile
     private void PlaceMoneyOnBoard(Player player, int amount)
     {
         Console.WriteLine($"Placing {amount}Ꝟ on the board.");
-        // Implement logic to place money on the board (example: deduct it from player's balance)
+
         if (player.Balance >= amount)
         {
             player.Balance -= amount;
@@ -859,18 +850,22 @@ public class CommunityChestTile : Tile
         player.Position = Program.tiles.FindIndex(tile => tile is JailTile);
     }
 
-    private void PayEachPlayer(Player player, int amount)
+    public static void PayEachPlayer(Player payingPlayer, int amount, List<Player> allPlayers)
     {
-        Console.WriteLine($"{player.Name} has to pay each player {amount}Ꝟ.");
+        Console.WriteLine($"{payingPlayer.Name} has to pay each player {amount}Ꝟ.");
 
-        foreach (Player otherPlayer in Program.players)
+        foreach (Player otherPlayers in allPlayers)
         {
-            if (otherPlayer != player)  // Exclude the current player
+            if (otherPlayers != payingPlayer)
             {
-                Console.WriteLine($"{player.Name} pays {otherPlayer.Name} 100Ꝟ.");
-                player.Pay(100);
-                otherPlayer.Money += 100;
+                Console.WriteLine($"{payingPlayer.Name} pays {otherPlayers.Name} {amount}Ꝟ.");
+                payingPlayer.Balance -= amount;
+                otherPlayers.Balance += amount;
             }
+        }
+        if (payingPlayer.Balance < 0)
+        {
+            Program.kill(payingPlayer);
         }
     }
 
@@ -939,11 +934,34 @@ public class Program
 
             foreach (Tile property in player.Tiles)
             {
-                Console.WriteLine($"  - {property.Name}");
+                Console.Write($"  - {property.Name}");
+
+                if (property is RealEstateTile realEstateTile)
+                {
+                    int houseCount = realEstateTile.GetHouseCount();
+                    if (houseCount > 0)
+                    {
+                        Console.Write($" (Houses: {houseCount})");
+                    }
+                    else if (houseCount == 5)
+                    {
+                        Console.Write(" (Hotel)");
+                    }
+                }
+
+                Console.WriteLine();
             }
 
             Console.WriteLine();
         }
+    }
+    public static void kill(Player player)
+    {
+
+        Console.WriteLine($"{player.Name} has a negative balance and is out of the game!");
+        players.Remove(player);
+        RealEstateTile.ReturnProperties(player);
+
     }
 
     static void DisplayBoard(List<Player> allPlayers)
@@ -974,12 +992,7 @@ public class Program
                 tileInfo += "  ";
                 pl.ForEach(p => tileInfo += "( " + p.Name + " ),");
             }
-
             Console.WriteLine($"- {tileInfo}");
-
-
-
-
         }
 
         Console.WriteLine();
@@ -996,51 +1009,52 @@ public class Program
     }
 
 
+
     public static List<Player> players = new List<Player>();
 
 
     public static List<Tile> tiles = new List<Tile>
 {
     new StartTile("Start"),
-    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320, 450}),
+    new RealEstateTile("Buy Land (Tier 1 - 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320, 450}),
     new CommunityChestTile("Community Chest"),
-    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320, 450 }),
+    new RealEstateTile("Buy Land (Tier 1 - 2)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320, 450 }),
     new IncomeTaxTile("Income Tax", 200),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
-    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
+    new RealEstateTile("Buy Land (Tier 2 - 1)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
     new ChanceTile("Chance"),
-    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
-    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
+    new RealEstateTile("Buy Land (Tier 2 - 2 )", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
+    new RealEstateTile("Buy Land (Tier 2 - 3)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
     new JailTile("The Jail"),
-    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
+    new RealEstateTile("Buy Land (Tier 3 - 1)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
     new UtilityTile("Electric Company", 100),
-    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
-    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
+    new RealEstateTile("Buy Land (Tier 3 - 2)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
+    new RealEstateTile("Buy Land (Tier 3 - 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
-    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
+    new RealEstateTile("Buy Land (Tier 4 - 1)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
     new CommunityChestTile("Community Chest"),
-    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
-    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
+    new RealEstateTile("Buy Land (Tier 4 - 2)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
+    new RealEstateTile("Buy Land (Tier 4 - 3)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
     new FreeParkingTile("Free Parking"),
-    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
+    new RealEstateTile("Buy Land (Tier 5 - 1)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
     new ChanceTile("Chance"),
-    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
-    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
+    new RealEstateTile("Buy Land (Tier 5 - 2)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
+    new RealEstateTile("Buy Land (Tier 5 - 3)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
-    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
-    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
+    new RealEstateTile("Buy Land (Tier 6 - 1)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
+    new RealEstateTile("Buy Land (Tier 6 - 2)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
     new UtilityTile("Water Works", 100),
-    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
+    new RealEstateTile("Buy Land (Tier 6 - 3)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
     new GoToJailTile("Go to Jail"),
-    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
-    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
+    new RealEstateTile("Buy Land (Tier 7 - 1)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
+    new RealEstateTile("Buy Land (Tier 7 - 2)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
     new CommunityChestTile("Community Chest"),
-    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
+    new RealEstateTile("Buy Land (Tier 7 - 3)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
     new ChanceTile("Chance"),
-    new RealEstateTile("Buy Land (Tier 8)", 8, 320, 200, new int[] { 50, 200, 600, 1400, 1700, 2000 }),
+    new RealEstateTile("Buy Land (Tier 8 - 1)", 8, 320, 200, new int[] { 50, 200, 600, 1400, 1700, 2000 }),
     new LuxuryTaxTile("Luxury Tax", 150),
-    new RealEstateTile("Buy Land (Tier 8)", 8, 400, 200, new int[] { 50, 200, 600, 1400, 1700, 2000 })
+    new RealEstateTile("Buy Land (Tier 8 - 2)", 8, 400, 200, new int[] { 50, 200, 600, 1400, 1700, 2000 })
 };
 
     static void Main()
@@ -1061,7 +1075,7 @@ public class Program
         {
             Console.Write($"Enter the name for Player {i}: ");
             string playerName = Console.ReadLine();
-            players.Add(new Player { Name = playerName, Balance = 50000, Position = 0 });
+            players.Add(new Player { Name = playerName, Balance = 0, Position = 0 });
         }
 
 
@@ -1080,13 +1094,10 @@ public class Program
 
             if (currentPlayer.Balance < 0)
             {
-                Console.WriteLine($"{currentPlayer.Name} has a negative balance and is out of the game!");
-                players.Remove(currentPlayer);
-                RealEstateTile.ReturnProperties(currentPlayer);
+                kill(currentPlayer);
             }
 
             DisplayBoard(players);
-
             Console.WriteLine($"It's {currentPlayer.Name}'s turn. Do you want to view properties and balances before rolling the dice? (y/n)");
             string input = Console.ReadLine();
 
@@ -1118,7 +1129,7 @@ public class Program
             }
             else
             {
-                // Simulate rolling two dice
+                // rolling two dice
                 int dice1 = random.Next(1, 6);
                 int dice2 = random.Next(1, 6);
                 int sum = dice1 + dice2;
