@@ -217,13 +217,14 @@ public class RealEstateTile : Tile
                     BuildHouse(player);
                     break;
                 case 2:
-                    if (houseCount < 5)
+                    if (houseCount < 4)
                     {
                         Console.WriteLine($"{player.Name} cannot upgrade to a hotel yet. Build more houses first.");
                     }
                     else
                     {
                         UpgradeToHotel(player);
+                        houseCount = 5;
                     }
                     break;
                     // case 3: Do nothing
@@ -262,10 +263,10 @@ public class RealEstateTile : Tile
 
     private void UpgradeToHotel(Player player)
     {
-        if (player.Balance >= hotelCost && houseCount == 5)
+        if (player.Balance >= hotelCost && houseCount == 4)
         {
             player.Pay(hotelCost);
-            houseCount = 5; // Upgrade to a hotel
+            houseCount = 4; // Upgrade to a hotel
             Console.WriteLine($"{player.Name} built a hotel on {Name}.");
         }
         else
@@ -274,65 +275,9 @@ public class RealEstateTile : Tile
         }
     }
 
-    /* private void BuildHouse(Player player)
-     {
-         int maxHouses = 5; // Maximum number of houses allowed before upgrading to a hotel
-
-         if (houseCount < maxHouses && player.CanAfford(BuildHouseCost))
-         {
-             Console.Write($"{player.Name}, how many houses would you like to build on {Name}? Enter a number (1-{maxHouses - houseCount}): ");
-
-             if (int.TryParse(Console.ReadLine(), out int housesToBuild) && housesToBuild >= 1 && housesToBuild <= maxHouses - houseCount)
-             {
-                 int totalCost = BuildHouseCost * housesToBuild;
-                 player.Pay(totalCost);
-                 houseCount += housesToBuild;
-
-                 Console.WriteLine($"{player.Name} built {housesToBuild} houses on {Name}.");
-             }
-             else
-             {
-                 Console.WriteLine("Invalid input. Please enter a valid number of houses to build.");
-             }
-         }
-         else if (houseCount == maxHouses)
-         {
-             Console.WriteLine($"{player.Name} has reached the maximum number of houses. Consider upgrading to a hotel.");
-         }
-         else
-         {
-             Console.WriteLine($"{player.Name} cannot afford to build houses or has reached the maximum limit.");
-         }
-     }
-
-     private void BuildHotel(Player player)
-     {
-         int housesNeededForHotel = 5;
-
-         if (houseCount == housesNeededForHotel)
-         {
-             Console.WriteLine($"{player.Name}, you already have 5 houses on {Name}. Do you want to upgrade to a hotel? (y/n): ");
-
-             string response = Console.ReadLine();
-
-             if (response.ToLower() == "y")
-             {
-                 UpgradeToHotel(player);
-             }
-             else
-             {
-                 Console.WriteLine($"{player.Name} decided not to upgrade to a hotel on {Name}.");
-             }
-         }
-         else
-         {
-             Console.WriteLine($"{player.Name} needs to build 5 houses on {Name} before upgrading to a hotel.");
-         }
-     }*/
-
     private void BuildHouse(Player player)
     {
-        int maxHouses = 5; // Maximum number of houses allowed before upgrading to a hotel
+        int maxHouses = 4; // Maximum number of houses allowed before upgrading to a hotel
 
         if (houseCount < maxHouses && player.CanAfford(BuildHouseCost))
         {
@@ -368,38 +313,6 @@ public class RealEstateTile : Tile
             Console.WriteLine($"{player.Name} cannot afford to build houses or has reached the maximum limit.");
         }
     }
-
-    private void BuildHotel(Player player)
-    {
-        int housesNeededForHotel = 5;
-        int remainingHouses = housesNeededForHotel - houseCount;
-
-        Console.Write($"{player.Name}, how many houses would you like to use for upgrading to a hotel on {Name}? Enter a number (1-{remainingHouses}): ");
-
-        if (int.TryParse(Console.ReadLine(), out int housesToUpgrade) && housesToUpgrade >= 1 && housesToUpgrade <= remainingHouses)
-        {
-            int totalCost = BuildHouseCost * housesToUpgrade;
-
-            if (player.CanAfford(totalCost))
-            {
-                player.Pay(totalCost);
-                houseCount = housesNeededForHotel; // Upgrade to a hotel
-
-                Console.WriteLine($"{player.Name} upgraded to a hotel on {Name} using {housesToUpgrade} houses.");
-            }
-            else
-            {
-                Console.WriteLine($"{player.Name} doesn't have enough money to upgrade to a hotel.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("Invalid input. Please enter a valid number of houses to use for upgrading to a hotel.");
-        }
-    }
-
-
-
     private void BuyProperty(Player player, int cost)
     {
         if (player.Balance >= cost)
@@ -1044,21 +957,22 @@ public class Program
             if (tiles.ElementAt(i) is RealEstateTile realEstateTile)
             {
                 int houseCount = realEstateTile.GetHouseCount();
-                if (houseCount > 0)
-                {
-                    tileInfo += $" (Houses: {houseCount})";
-                }
-                else if (houseCount == 5)
+                if (houseCount == 5)
                 {
                     tileInfo += " (Hotel)";
                 }
+                else if (houseCount > 0)
+                {
+                    tileInfo += $" (Houses: {houseCount})";
+                }
+
             }
-            
-            
-            if(pl.Count > 0)
+
+
+            if (pl.Count > 0)
             {
                 tileInfo += "  ";
-                pl.ForEach(p => tileInfo +="( " + p.Name + " ),");
+                pl.ForEach(p => tileInfo += "( " + p.Name + " ),");
             }
 
             Console.WriteLine($"- {tileInfo}");
@@ -1087,53 +1001,47 @@ public class Program
 
     public static List<Tile> tiles = new List<Tile>
 {
-
     new StartTile("Start"),
-    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
+    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320, 450}),
     new CommunityChestTile("Community Chest"),
-    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320 }),
+    new RealEstateTile("Buy Land (Tier 1)", 1, 60, 50, new int[] { 4, 20, 60, 180, 320, 450 }),
     new IncomeTaxTile("Income Tax", 200),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
-    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
+    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
     new ChanceTile("Chance"),
-    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
-    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450 }),
+    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
+    new RealEstateTile("Buy Land (Tier 2)", 2, 120, 50, new int[] { 8, 40, 100, 300, 450, 600 }),
     new JailTile("The Jail"),
-    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700 }),
+    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
     new UtilityTile("Electric Company", 100),
-    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700 }),
-    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700 }),
+    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
+    new RealEstateTile("Buy Land (Tier 3)", 3, 160, 100, new int[] { 12, 60, 180, 500, 700, 900 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
-    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800 }),
+    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
     new CommunityChestTile("Community Chest"),
-    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800 }),
-    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800 }),
+    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
+    new RealEstateTile("Buy Land (Tier 4)", 4, 200, 100, new int[] { 16, 80, 220, 600, 800, 1000 }),
     new FreeParkingTile("Free Parking"),
-    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925 }),
+    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
     new ChanceTile("Chance"),
-    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925 }),
-    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925 }),
+    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
+    new RealEstateTile("Buy Land (Tier 5)", 5, 240, 150, new int[] { 20, 100, 300, 750, 925, 1100 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
-    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025 }),
-    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025 }),
+    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
+    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
     new UtilityTile("Water Works", 100),
-    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025 }),
+    new RealEstateTile("Buy Land (Tier 6)", 6, 280, 150, new int[] { 24, 120, 360, 850, 1025, 1200 }),
     new GoToJailTile("Go to Jail"),
-    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 }),
-    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 }),
+    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
+    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
     new CommunityChestTile("Community Chest"),
-    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200 }),
+    new RealEstateTile("Buy Land (Tier 7)", 7, 320, 200, new int[] { 28, 150, 450, 1000, 1200, 1400 }),
     new TrainStationTile("Train Station", 100, 50, 100, 150, 200),
     new ChanceTile("Chance"),
-    new RealEstateTile("Buy Land (Tier 8)", 8, 320, 200, new int[] { 28, 150, 450, 1000, 1200 }),
+    new RealEstateTile("Buy Land (Tier 8)", 8, 320, 200, new int[] { 50, 200, 600, 1400, 1700, 2000 }),
     new LuxuryTaxTile("Luxury Tax", 150),
-    new RealEstateTile("Buy Land (Tier 8)", 8, 400, 200, new int[] { 50, 200, 600, 1400, 1200 })
-
-
+    new RealEstateTile("Buy Land (Tier 8)", 8, 400, 200, new int[] { 50, 200, 600, 1400, 1700, 2000 })
 };
-
-
-
 
     static void Main()
     {
@@ -1153,7 +1061,7 @@ public class Program
         {
             Console.Write($"Enter the name for Player {i}: ");
             string playerName = Console.ReadLine();
-            players.Add(new Player { Name = playerName, Balance = 200, Position = 0 });
+            players.Add(new Player { Name = playerName, Balance = 50000, Position = 0 });
         }
 
 
@@ -1234,7 +1142,7 @@ public class Program
                 Tile landedTile = tiles[newPosition];
                 currentPlayer.Position = newPosition;
                 Console.WriteLine($"{currentPlayer.Name} landed on {landedTile.Name}");
-                
+
                 // Check if the player is in jail
                 if (landedTile is JailTile)
                 {
@@ -1244,7 +1152,7 @@ public class Program
                 {
                     currentPlayer.Position = newPosition;
                     landedTile.PerformAction(currentPlayer, sum);
-                }                
+                }
             }
 
             // Move to the next player
