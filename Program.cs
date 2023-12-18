@@ -49,7 +49,7 @@ public class Player
 
 }
 
-public class Tile
+public abstract class Tile
 {
     public string Name { get; set; }
     public Player Owner { get; set; }
