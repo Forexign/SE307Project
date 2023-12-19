@@ -10,7 +10,7 @@ public class Player
     private int balance;
     private int position;
     private int money;
-    private List<Tile> tiles = new List<Tile>();
+    private List<Tile> properties = new List<Tile>();
     private bool inJail;
     private int turnsInJail;
     private bool jailfree = false;
@@ -39,10 +39,10 @@ public class Player
         set { money = value; }
     }
 
-    public List<Tile> Tiles
+    public List<Tile> Properties
     {
-        get { return tiles; }
-        set { tiles = value; }
+        get { return properties; }
+        set { properties = value; }
     }
 
     public bool InJail
@@ -288,10 +288,10 @@ public class RealEstateTile : Tile
     {
         Console.WriteLine($"{player.Name} doesn't have enough money and must return all properties.");
 
-        foreach (var property in player.Tiles.ToList())
+        foreach (var property in player.Properties.ToList())
         {
             property.Owner = null;
-            player.Tiles.Remove(property);
+            player.Properties.Remove(property);
         }
     }
 
@@ -355,7 +355,7 @@ public class RealEstateTile : Tile
             Console.WriteLine($"{player.Name} bought {Name} for {cost}Ꝟ.");
             player.Balance -= cost;
             Owner = player;
-            player.Tiles.Add(this);
+            player.Properties.Add(this);
         }
         else
         {
@@ -427,7 +427,7 @@ public class TrainStationTile : Tile
 
     private int GetOwnerStationsCount()
     {
-        return Owner.Tiles.Count(tile => tile is TrainStationTile);
+        return Owner.Properties.Count(tile => tile is TrainStationTile);
     }
 
     private void BuyProperty(Player player)
@@ -437,7 +437,7 @@ public class TrainStationTile : Tile
             Console.WriteLine($"{player.Name} bought the train station for {Cost}Ꝟ.");
             player.Balance -= Cost;
             Owner = player;
-            player.Tiles.Add(this);
+            player.Properties.Add(this);
         }
         else
         {
@@ -488,7 +488,7 @@ public class UtilityTile : Tile
             Console.WriteLine($"{player.Name} bought {Name} for {Cost}Ꝟ.");
             player.Balance -= Cost;
             Owner = player;
-            player.Tiles.Add(this);
+            player.Properties.Add(this);
         }
         else
         {
@@ -498,7 +498,7 @@ public class UtilityTile : Tile
 
     private int CalculateRent(int diceSum)
     {
-        int ownerUtilities = Owner.Tiles.Count(tile => tile is UtilityTile);
+        int ownerUtilities = Owner.Properties.Count(tile => tile is UtilityTile);
 
         if (ownerUtilities == 1 || ownerUtilities == 2)
         {
@@ -675,8 +675,8 @@ public class ChanceTile : Tile
 
     private void PlaceMoneyForHousesAndHotels(Player player)
     {
-        int totalMoney = player.Tiles.OfType<RealEstateTile>().Sum(t => t.GetHouseCount() * 25);
-        totalMoney += player.Tiles.OfType<RealEstateTile>().Count(t => t.GetHouseCount() == 5) * 100;
+        int totalMoney = player.Properties.OfType<RealEstateTile>().Sum(t => t.GetHouseCount() * 25);
+        totalMoney += player.Properties.OfType<RealEstateTile>().Count(t => t.GetHouseCount() == 5) * 100;
 
         Console.WriteLine($"Placing {totalMoney}Ꝟ on the board for houses and hotels.");
     }
@@ -747,7 +747,7 @@ public class ChanceTile : Tile
         int houses = 0;
         if (player != null)
         {
-            houses = player.Tiles.OfType<RealEstateTile>().Count(t => t.GetHouseCount() == 5);
+            houses = player.Properties.OfType<RealEstateTile>().Count(t => t.GetHouseCount() == 5);
         }
         return houses;
     }
@@ -871,8 +871,8 @@ public class CommunityChestTile : Tile
 
     private void PlaceMoneyForHousesAndHotels(Player player)
     {
-        int totalMoney = player.Tiles.OfType<RealEstateTile>().Sum(t => t.GetHouseCount() * 40);
-        totalMoney += player.Tiles.OfType<RealEstateTile>().Count(t => t.GetHouseCount() == 5) * 115;
+        int totalMoney = player.Properties.OfType<RealEstateTile>().Sum(t => t.GetHouseCount() * 40);
+        totalMoney += player.Properties.OfType<RealEstateTile>().Count(t => t.GetHouseCount() == 5) * 115;
 
         Console.WriteLine($"Placing {totalMoney}Ꝟ on the board for houses and hotels.");
         // Implement logic to place money on the board (not specified in your original code)
@@ -1008,7 +1008,7 @@ public class Program
         {
             Console.WriteLine($"{player.Name} (Balance: {player.Balance})");
 
-            foreach (Tile property in player.Tiles)
+            foreach (Tile property in player.Properties)
             {
                 Console.Write($"  - {property.Name}");
 
@@ -1047,7 +1047,7 @@ public class Program
         for (int i = 0; i < tiles.Count; i++)
         {
             string tileInfo = $"{tiles.ElementAt(i).Name}";
-            List<Player> owners = players.Where(p => p.Tiles.Contains(tiles[i])).ToList();
+            List<Player> owners = players.Where(p => p.Properties.Contains(tiles[i])).ToList();
 
             if (tiles.ElementAt(i) is RealEstateTile realEstateTile)
             {
