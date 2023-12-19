@@ -6,28 +6,75 @@ using System.Security;
 
 public class Player
 {
-    public string Name { get; set; }
-    public int Balance { get; set; }
-    public int Position { get; set; }
+    private string name;
+    private int balance;
+    private int position;
+    private int money;
+    private List<Tile> tiles = new List<Tile>();
+    private bool inJail;
+    private int turnsInJail;
+    private bool jailfree = false;
 
-    public int Money { get; set; }
+    public string Name
+    {
+        get { return name; }
+        set { name = value; }
+    }
 
-    public List<Tile> Tiles { get; set; } = new List<Tile>();
+    public int Balance
+    {
+        get { return balance; }
+        set { balance = value; }
+    }
 
-    public bool InJail { get; set; }
-    public int TurnsInJail { get; set; }
+    public int Position
+    {
+        get { return position; }
+        set { position = value; }
+    }
 
-    public bool jailfree = false;
+    public int Money
+    {
+        get { return money; }
+        set { money = value; }
+    }
 
+    public List<Tile> Tiles
+    {
+        get { return tiles; }
+        set { tiles = value; }
+    }
+
+    public bool InJail
+    {
+        get { return inJail; }
+        set { inJail = value; }
+    }
+
+    public int TurnsInJail
+    {
+        get { return turnsInJail; }
+        set { turnsInJail = value; }
+    }
+
+    // Getter method for jailfree
+    public bool GetJailFree()
+    {
+        return jailfree;
+    }
+
+    public void SetJailFree(bool value)
+    {
+        jailfree = value;
+    }
 
     public void GoToJail()
     {
         Console.WriteLine($"{Name} goes to jail!");
         Position = 10;
         InJail = true;
-        TurnsInJail = 2; // Set the number of turns the player has to stay in jail
+        TurnsInJail = 2;
     }
-
 
     public bool CanAfford(int amount)
     {
@@ -46,14 +93,14 @@ public class Player
             Console.WriteLine($"{Name} cannot afford to pay {amount}Ꝟ.");
         }
     }
-
 }
+
+
 
 public abstract class Tile
 {
     public string Name { get; set; }
     public Player Owner { get; set; }
-
     public virtual void PerformAction(Player player, int diceSum)
     {
 
@@ -83,9 +130,9 @@ public class GoToJailTile : Tile
     public override void PerformAction(Player player, int diceSum)
     {
 
-        if (player.jailfree == false)
+        if (player.GetJailFree() == false)
         {
-            Console.WriteLine($"{player.Name} landed on {Name}! They go to jail immediately.");
+            Console.WriteLine($"{player.Name} landed on {Name}! Goes to jail immediately.");
 
             // Send the player to the jail
             player.GoToJail();
@@ -93,7 +140,7 @@ public class GoToJailTile : Tile
         else
         {
             Console.WriteLine($"{player.Name} has jail free card");
-            player.jailfree = false;
+            player.SetJailFree(false);
         }
     }
 }
@@ -345,6 +392,10 @@ public class TrainStationTile : Tile
             {
                 BuyProperty(player);
             }
+            else
+            {
+                Console.WriteLine($"{player.Name} decided not to buy {Name}.");
+            }
         }
         else if (Owner != player)
         {
@@ -414,6 +465,10 @@ public class UtilityTile : Tile
             if (Console.ReadLine().ToUpper() == "Y")
             {
                 BuyProperty(player);
+            }
+            else
+            {
+                Console.WriteLine($"{player.Name} decided not to buy {Name}.");
             }
         }
         else if (Owner != player)
@@ -515,7 +570,7 @@ public class JailTile : Tile
         Console.WriteLine($"{player.Name} landed on {Name}");
 
         // Check if the player is in jail
-        if (player.jailfree == false)
+        if (player.GetJailFree() == false)
         {
             if (player.InJail)
             {
@@ -534,7 +589,7 @@ public class JailTile : Tile
         else
         {
             Console.WriteLine($"{player.Name} has jail free card");
-            player.jailfree = false;
+            player.SetJailFree(false);
         }
     }
 }
@@ -658,13 +713,21 @@ public class ChanceTile : Tile
 
     private void GetOutOfJail(Player player)
     {
-        player.jailfree = true;
+        player.SetJailFree(true);
         Console.WriteLine($"{player.Name} has jail free card");
     }
 
-    private static void PayEachPlayer(Player payingPlayer, int amount, List<Player> allPlayers)
+    private void PayEachPlayer(Player payingPlayer, int amount, List<Player> allPlayers)
     {
         Console.WriteLine($"{payingPlayer.Name} has to pay each player {amount}Ꝟ.");
+
+        int totalAmount = (allPlayers.Count - 1) * amount;
+
+        if (payingPlayer.Balance < totalAmount)
+        {
+            Program.kill(payingPlayer);
+            return;
+        }
 
         foreach (Player otherPlayers in allPlayers)
         {
@@ -675,10 +738,7 @@ public class ChanceTile : Tile
                 otherPlayers.Balance += amount;
             }
         }
-        if (payingPlayer.Balance < 0)
-        {
-            Program.kill(payingPlayer);
-        }
+
     }
 
     private int GetOwnerHousesAndHotelsCount(Player player)
@@ -741,7 +801,7 @@ public class CommunityChestTile : Tile
 
         // Random card from community chest 
         Random random = new Random();
-        int cardNumber = random.Next(1, 9);
+        int cardNumber = random.Next(1, 10);
         DrawCard(player, cardNumber);
     }
 
@@ -768,10 +828,13 @@ public class CommunityChestTile : Tile
                 GoBackTiles(player, 1);
                 break;
             case 7:
-                TravelToJail(player);
+                TravelToStart(player);
                 break;
             case 8:
-                PayEachPlayer(player, 100, Program.players);
+                TravelToJail(player);
+                break;
+            case 9:
+                CollectFromEachPlayer(player, 100, Program.players);
                 break;
         }
     }
@@ -850,24 +913,37 @@ public class CommunityChestTile : Tile
         player.Position = Program.tiles.FindIndex(tile => tile is JailTile);
     }
 
-    public static void PayEachPlayer(Player payingPlayer, int amount, List<Player> allPlayers)
+    private void TravelToStart(Player player)
     {
-        Console.WriteLine($"{payingPlayer.Name} has to pay each player {amount}Ꝟ.");
+        Console.WriteLine($"{player.Name} is traveling to jail.");
+        //player.Position = Program.tiles.FindIndex(tile => tile is StartTile);
+        player.Position = 0;
+    }
 
-        foreach (Player otherPlayers in allPlayers)
+    private void CollectFromEachPlayer(Player collectingPlayer, int amount, List<Player> allPlayers)
+    {
+        Console.WriteLine($"{collectingPlayer.Name} is collecting {amount}Ꝟ from each player.");
+
+        foreach (Player otherPlayer in allPlayers)
         {
-            if (otherPlayers != payingPlayer)
+            if (otherPlayer != collectingPlayer)
             {
-                Console.WriteLine($"{payingPlayer.Name} pays {otherPlayers.Name} {amount}Ꝟ.");
-                payingPlayer.Balance -= amount;
-                otherPlayers.Balance += amount;
+                Console.WriteLine($"{collectingPlayer.Name} collects {amount}Ꝟ from {otherPlayer.Name}.");
+                collectingPlayer.Balance += amount;
+                otherPlayer.Balance -= amount;
             }
         }
-        if (payingPlayer.Balance < 0)
+
+        // Check if any player has a negative balance after the collection
+        foreach (Player player in allPlayers)
         {
-            Program.kill(payingPlayer);
+            if (player.Balance < 0)
+            {
+                Program.kill(player);
+            }
         }
     }
+
 
     private int FindNearestUtility(Player player)
     {
@@ -971,7 +1047,8 @@ public class Program
         for (int i = 0; i < tiles.Count; i++)
         {
             string tileInfo = $"{tiles.ElementAt(i).Name}";
-            List<Player> pl = players.FindAll(p => p.Position == i);
+            List<Player> owners = players.Where(p => p.Tiles.Contains(tiles[i])).ToList();
+
             if (tiles.ElementAt(i) is RealEstateTile realEstateTile)
             {
                 int houseCount = realEstateTile.GetHouseCount();
@@ -983,15 +1060,32 @@ public class Program
                 {
                     tileInfo += $" (Houses: {houseCount})";
                 }
-
             }
 
-
-            if (pl.Count > 0)
+            if (owners.Count > 0)
             {
-                tileInfo += "  ";
-                pl.ForEach(p => tileInfo += "( " + p.Name + " ),");
+                tileInfo += "  Owned by: ";
+                foreach (var owner in owners)
+                {
+                    tileInfo += $"{owner.Name}, ";
+                }
+                // Remove the trailing comma and space
+                tileInfo = tileInfo.Remove(tileInfo.Length - 2);
             }
+
+            // Display player names on the current tile
+            List<Player> playersOnTile = allPlayers.Where(p => p.Position % tiles.Count == i).ToList();
+            if (playersOnTile.Count > 0)
+            {
+                tileInfo += "  Players: ";
+                foreach (var playerOnTile in playersOnTile)
+                {
+                    tileInfo += $"{playerOnTile.Name}, ";
+                }
+                // Remove the trailing comma and space
+                tileInfo = tileInfo.Remove(tileInfo.Length - 2);
+            }
+
             Console.WriteLine($"- {tileInfo}");
         }
 
@@ -1007,6 +1101,8 @@ public class Program
 
         Console.WriteLine();
     }
+
+
 
 
 
@@ -1075,7 +1171,7 @@ public class Program
         {
             Console.Write($"Enter the name for Player {i}: ");
             string playerName = Console.ReadLine();
-            players.Add(new Player { Name = playerName, Balance = 0, Position = 0 });
+            players.Add(new Player { Name = playerName, Balance = 200, Position = 0 });
         }
 
 
